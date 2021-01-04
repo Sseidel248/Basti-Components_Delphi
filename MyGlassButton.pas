@@ -35,6 +35,38 @@ begin
       inherited;
 end;
 }
+{
+procedure TCustomForm.WMDpiChanged(var Message: TWMDpi);
+var
+  OldPPI: Integer;
+begin
+  if not (csDesigning in ComponentState) then
+  begin
+    if (Message.YDpi = 0) or not Scaled then
+    begin
+      if (Application.MainForm <> nil) and (Application.MainForm.Scaled) then
+        FCurrentPpi := Application.MainForm.PixelsPerInch
+      else
+        Exit;
+    end;
+
+    if (Message.YDpi <> FCurrentPpi) and Scaled then
+    begin
+      if Assigned(FOnBeforeMonitorDpiChanged) then
+        FOnBeforeMonitorDpiChanged(Self, FCurrentPPI, Message.YDpi);
+      OldPPI := FCurrentPPI;
+      ScaleForPPIRect(Message.YDpi, Message.ScaledRect);
+      FCurrentPPI := Message.YDpi;
+      if Assigned(FOnAfterMonitorDpiChanged) then
+        FOnAfterMonitorDpiChanged(Self, OldPPI, FCurrentPPI);
+    end;
+    Message.Result := 0;
+  end;
+end;
+
+}
+
+//TODO: Skalierung einbauen
 
 type
   TParentColortype = (
@@ -84,6 +116,7 @@ type
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure WMPaint( var Message: TWMPaint ); message WM_PAINT;
     procedure WMERASEBKGND(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+//    procedure WMDpiChanged(var Message: TWMDpi); message WM_DPICHANGED;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
     procedure PaintButton;
     procedure SetColor(const Value: TColor);
@@ -233,6 +266,13 @@ begin
     BmpAlpha.Height:= FBmp.Height - 2;
     BmpAlpha.Canvas.Brush.Color:= clWhite;
     BmpAlpha.Canvas.FillRect(BmpAlpha.Canvas.ClipRect);
+
+    //Change: Seidel 2021-01-04
+    //Font vom Canvas Skalieren; FScaleFactor kommt aus vcl.Controls
+    if FScaleFactor <> 1 then
+    begin
+      FBmp.Canvas.Font.Size := Round( FBmp.Canvas.Font.Size * FScaleFactor )
+    end;
 
     //entsprechende Bilder holen
     if Glyph then
@@ -426,6 +466,15 @@ begin
     Resize;
 end;
 
+//procedure TGlassButton.WMDpiChanged(var Message: TWMDpi);
+//begin
+//  if not (csDesigning in ComponentState) then
+//  begin
+//    Application.MessageBox( PChar( 'WMDpiChanged'), nil, MB_OK );
+//    Message.Result := 0;
+//  end;
+//end;
+
 //procedure TGlassButton.ParentWndProc(var Msg: TMessage);
 //begin
 //  FParentWindowHandle( Msg );
@@ -562,6 +611,7 @@ begin
   ParentFont := False;
   Width := 80;
   Caption:= 'GlassButton';
+  //FCurrentPPI kommt aus vcl.Control
 end;
 
 destructor TGlassButton.Destroy;
@@ -679,6 +729,7 @@ end;
 
 procedure TGlassButton.Resize;
 begin
+  //Application.MessageBox( PChar( 'Resize'), nil, MB_OK );
   Invalidate;
 end;
 
