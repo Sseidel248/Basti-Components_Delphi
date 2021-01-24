@@ -1,3 +1,12 @@
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  StringGridEx
+  Author: copyright (c) Sebastian Seidel
+  Date:   30.09.2020
+
+  Stringgrid kann sortiert werden
+  Die Spalten können unterschiedlich gestrecht werden.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
 unit StringGridEx;
 
 interface

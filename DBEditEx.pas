@@ -1,5 +1,5 @@
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  EditEx
+  DBEditEx
   Author: copyright (c) Sebastian Seidel
   Date:   08.10.2020
 
@@ -9,21 +9,15 @@
       geschrieben wurde
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
 
-unit EditEx;
+unit DBEditEx;
 
 interface
 
 uses
-  Windows,
-  SysUtils,
-  Classes,
-  vcl.Controls,
-  vcl.StdCtrls,
-  Messages,
-  vcl.Graphics;
+  Windows, SysUtils, Classes, Controls, DBCtrls, Messages, Graphics;
 
 type
-  TEditEx = class(TEdit)
+  TDBEditEx = class(TDBEdit)
   private
     Fh: TWMNCPAINT;
     FColorMouseLeave,
@@ -52,7 +46,7 @@ type
     constructor Create(AOwner: TComponent); override;
   published
     property Bordercolor : TColor read FBorderColor write SetBorderColor;
-    property FocusBorderColor : TColor read FFocusBorderColor write SetFocusBorderColor;
+    property FocusBoderColor : TColor read FFocusBorderColor write SetFocusBorderColor;
     property TextHintOnFocus : Boolean read FTextHintOnFocus write FTextHintOnFocus;
     property TextHint : String read FTextHint write SetTextHint;
     { Published-Deklarationen }
@@ -65,10 +59,10 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Basti_Komponenten', [TEditEx]);
+  RegisterComponents('Basti_Komponenten', [TDBEditEx]);
 end;
 
-constructor TEditEx.Create(AOwner: TComponent);
+constructor TDBEditEx.Create(AOwner: TComponent);
 begin
   inherited;
   ParentFont := True;
@@ -78,7 +72,7 @@ begin
   FFocusBorderColor := clNone;
 end;
 
-procedure TEditEx.SetTextHint( const value : String );
+procedure TDBEditEx.SetTextHint( const value : String );
 begin
     if FTextHint <> Value then
   begin
@@ -88,8 +82,7 @@ begin
   end;
 end;
 
-//Change: Seidel 2021-01-23
-procedure TEditEx.DoSetTextHint( const value : String );
+procedure TDBEditEx.DoSetTextHint( const value : String );
 const
   EM_SETCUEBANNER = $1501;
 var
@@ -103,25 +96,25 @@ begin
   SendMessage( self.Handle, EM_SETCUEBANNER, wParam, Integer( PWideChar( value ) ) );
 end;
 
-procedure TEditEx.Repaint;
+procedure TDBEditEx.Repaint;
 begin
   WMNCPAINT(Fh);
 end;
 
-procedure TEditEx.WMNCCalcSize(var Msg: TWMNCCalcSize);
+procedure TDBEditEx.WMNCCalcSize(var Msg: TWMNCCalcSize);
 begin
   inherited;
   InflateRect(Msg.CalcSize_Params^.rgrc[0], -1, -1);
 end;
 
-procedure TEditEx.WMNCPAINT(var Msg: TWMNCPAINT);
+procedure TDBEditEx.WMNCPAINT(var Msg: TWMNCPAINT);
 begin
   inherited;
   DrawBorder;
 end;
 
 
-procedure TEditEx.WMSetFocus(var Message: TWMSetFocus);
+procedure TDBEditEx.WMSetFocus(var Message: TWMSetFocus);
 begin
   inherited;
   if not (csDesigning in ComponentState) then
@@ -131,7 +124,7 @@ begin
   end;
 end;
 
-procedure TEditEx.WMKillFocus(var Message: TWMKillFocus);
+procedure TDBEditEx.WMKillFocus(var Message: TWMKillFocus);
 begin
   inherited;
   if not (csDesigning in ComponentState) then
@@ -141,7 +134,7 @@ begin
   end;
 end;
 
-procedure TEditEx.CMMouseEnter(var Message: TMessage);
+procedure TDBEditEx.CMMouseEnter(var Message: TMessage);
 begin
   inherited;
   if (GetActiveWindow <> 0) then
@@ -151,15 +144,14 @@ begin
   end;
 end;
 
-procedure TEditEx.CMMouseLeave(var Message: TMessage);
+procedure TDBEditEx.CMMouseLeave(var Message: TMessage);
 begin
   inherited;
   FFocusBoder := false;
   Repaint;
 end;
 
-//Change: Seidel 2021-01-06
-procedure TEditEx.SetBorderColor( const Value : TColor );
+procedure TDBEditEx.SetBorderColor( const Value : TColor );
 begin
    if (FBorderColor <> Value) then
   begin
@@ -171,8 +163,7 @@ begin
   end;
 end;
 
-//Change: Seidel 2021-01-23
-procedure TEditEx.SetFocusBorderColor( const Value : TColor );
+procedure TDBEditEx.SetFocusBorderColor( const Value : TColor );
 begin
   if (FFocusBorderColor <> Value) then
   begin
@@ -181,8 +172,7 @@ begin
   end;
 end;
 
-//Change: Seidel 2021-01-06
-procedure TEditEx.DrawBorder;
+procedure TDBEditEx.DrawBorder;
   var
   DC: HDC;
 begin
@@ -195,8 +185,7 @@ begin
   end;
 end;
 
-//Change: Seidel 2021-01-06
-procedure TEditEx.DrawBorderControl( DC : HDC );
+procedure TDBEditEx.DrawBorderControl( DC : HDC );
 var
   ARect: TRect;
   BtnFaceBrush: HBRUSH;

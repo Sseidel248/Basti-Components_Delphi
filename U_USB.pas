@@ -1,9 +1,19 @@
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  U_USB
+  Author: copyright (c) Sebastian Seidel
+  Date:   30.09.2020
+
+  Erkennt das anstecken und abziehen eines USB-Speichers
+  Kann den laufwerksbuchstaben zurück geben
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
 unit U_USB;
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, vcl.Forms;
+  Windows, Messages, SysUtils, Classes,
+  vcl.Forms;
 
 type
 

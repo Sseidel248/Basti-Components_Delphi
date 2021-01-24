@@ -1,22 +1,27 @@
-unit Edit4User;
-
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Edit4User
-  Author: Sebastian Seidel
+  Author: copyright (c) Sebastian Seidel
   Date:   08.10.2020
 
-  ermöglicht bei einer falschen Eingabe ein roten Rahmen und bei richtiger
-  Eingabe einen grünen Rahmen, mit TextHint
+  Spezielle Anpassungen für eine Benutzereingabe
+  Rahmen wird rot wenn FUserExist = true und grün wenn FUserExist = false
+  Zudem wird ein passender Hint erzeugt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
+unit Edit4User;
 
 interface
 
 uses
-  Winapi.Messages, System.UITypes, System.SysUtils, System.Types, System.Classes,
-  Vcl.Controls, Vcl.Graphics ,Vcl.StdCtrls;
+  Winapi.Messages,
+  System.SysUtils,
+  System.Classes,
+  vcl.Controls,
+  vcl.Graphics,
+  EditEx;
 
 type
-  TEdit4User = Class(Vcl.StdCtrls.TEdit)
+  TEdit4User = Class(TEditEx)
     procedure WMPaint( var Message: TWMPaint ); message WM_PAINT;
     procedure CMTextChanged( var Message: TMessage ); message CM_TEXTCHANGED;
     procedure WMKEYUP( var Message: TWMPaint ); message WM_KEYUP;
@@ -25,10 +30,11 @@ type
     FRequired: Boolean;
     FUserExist : Boolean;
     procedure CheckForInvalidate;
-    procedure DrawBorder( AColor : TColor );
+    procedure ChangeBorder( const AColor : TColor );
   published
     Property Required: Boolean read FRequired write FRequired default false;
   public
+    constructor Create(AOwner: TComponent); override;
     Property UserExist: Boolean read FUserExist Write FUserExist default false;
   End;
 
@@ -47,6 +53,12 @@ TEdit mit Farbigen Rand
 *******************************************************************************
 Author: Seidel 2020-10-10
 -------------------------------------------------------------------------------}
+
+constructor TEdit4User.Create(AOwner: TComponent);
+begin
+  inherited Create( AOwner );
+  ShowHint := true;
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-17
@@ -93,7 +105,7 @@ begin
   if Required and ( ( Length( Trim( Text ) ) = 0 ) or UserExist ) then
   begin
     FPainted := true;
-    DrawBorder( clRed );
+    ChangeBorder( clRed );
     if Length( Trim( Text ) ) = 0 then
       Hint := 'Bitte einen Benutzer eingeben!'
     else
@@ -103,11 +115,12 @@ begin
   if Required and ( not UserExist ) then
   begin
     FPainted := false;
-    DrawBorder( clGreen );
+    ChangeBorder( clGreen );
     Hint := 'Der eigebene Benutzer kann verwendet werden.';
   end
   else
   begin
+    ChangeBorder( clNone );
     FPainted := false;
   end;
 end;
@@ -115,37 +128,10 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-10
 -------------------------------------------------------------------------------}
-procedure TEdit4User.DrawBorder( AColor : TColor );
-var
-  CC: TControlCanvas;
-  OldFontSize : Integer;
-  TextStr : String;
-  Rect : TRect;
+procedure TEdit4User.ChangeBorder( const AColor : TColor );
 begin
-  OldFontSize := Font.Size;
-  TextStr := Text;
-  Rect := ClientRect;
-  CC := TControlCanvas.Create;
-  try
-    CC.Control := Self;
-    CC.Pen.Color := AColor;
-    CC.Pen.Width := 3;
-    CC.Rectangle( ClientRect );
-    CC.Font.Size := OldFontSize;
-    if length( Trim ( Text ) ) = 0 then
-    begin
-      CC.Font.Color := clSilver;
-      CC.TextOut( 2, 2, TextHint )
-    end
-    else
-    begin
-      CC.Font.Color := clBlack;
-      CC.TextOut( 2, 2, Text );
-    end;
-
-  finally
-    CC.Free;
-  end;
+  Self.Bordercolor := AColor;
+  Self.FocusBorderColor := AColor;
 end;
 {------------------------------------------------------------------------------
 *******************************************************************************

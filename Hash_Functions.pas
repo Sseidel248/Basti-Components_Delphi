@@ -1,14 +1,12 @@
-unit Hash_Functions;
+{******************************************************************************
+Hash_Functions
 
-{
-*************************************************************
-*           Funktionen zum Verschlüsseln                    *
-*           von wichtigen Informationen                     *
-*                                                           *
-*           Author : Sebastian Seidel                       *
-*           Date : 2020-10-03                               *
-*************************************************************
-}
+Author: copyright (c) Sebastian Seidel
+
+Funktionen zum Verschlüsseln von wichtigen Informationen
+*******************************************************************************}
+
+unit Hash_Functions;
 
 interface
 

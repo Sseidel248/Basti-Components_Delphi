@@ -41,11 +41,10 @@ requires
 contains
   GradientPanel in 'GradientPanel.pas',
   Edit4User in 'Edit4User.pas',
-  EditWithBorder in 'EditWithBorder.pas',
-  DBEditWithTextHint in 'DBEditWithTextHint.pas',
   U_USB in 'U_USB.pas',
   StringGridEx in 'StringGridEx.pas',
   MyGlassButton in 'MyGlassButton.pas',
-  EditEx in 'EditEx.pas';
+  EditEx in 'EditEx.pas',
+  DBEditEx in 'DBEditEx.pas';
 
 end.

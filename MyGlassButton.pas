@@ -1,3 +1,13 @@
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  MyGlassButton
+  Author: copyright (c) Sebastian Seidel
+  Date:   30.09.2020
+
+  Den Button kann eine Imageliste zugewiesen gewerden.
+  Außerdem kann zwischen ImageIndex und DisableImageIndex unterschieden werden.
+  Mit einstellen des FParentColorType kann der Button durchsichtig werden.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
 unit MyGlassButton;
 
 interface
@@ -13,60 +23,8 @@ uses
   vcl.Graphics,
   vcl.Themes,
   vcl.Forms,
-//  Winapi.Commctrl,
   vcl.ImgList;
 
-{
-procedure CNCtlColorBtn(var Message: TWMCtlColorBtn); message CN_CTLCOLORBTN;
-
-procedure TCustomButton.CNCtlColorBtn(var Message: TWMCtlColorBtn);
-begin
-  with StyleServices do
-    if Enabled then
-    begin
-      if (Parent <> nil) and Parent.DoubleBuffered then
-        PerformEraseBackground(Self, Message.ChildDC)
-      else
-        DrawParentBackground(Handle, Message.ChildDC, nil, False);
-      // Return an empty brush to prevent Windows from overpainting we just have created.
-      Message.Result := GetStockObject(NULL_BRUSH);
-    end
-    else
-      inherited;
-end;
-}
-{
-procedure TCustomForm.WMDpiChanged(var Message: TWMDpi);
-var
-  OldPPI: Integer;
-begin
-  if not (csDesigning in ComponentState) then
-  begin
-    if (Message.YDpi = 0) or not Scaled then
-    begin
-      if (Application.MainForm <> nil) and (Application.MainForm.Scaled) then
-        FCurrentPpi := Application.MainForm.PixelsPerInch
-      else
-        Exit;
-    end;
-
-    if (Message.YDpi <> FCurrentPpi) and Scaled then
-    begin
-      if Assigned(FOnBeforeMonitorDpiChanged) then
-        FOnBeforeMonitorDpiChanged(Self, FCurrentPPI, Message.YDpi);
-      OldPPI := FCurrentPPI;
-      ScaleForPPIRect(Message.YDpi, Message.ScaledRect);
-      FCurrentPPI := Message.YDpi;
-      if Assigned(FOnAfterMonitorDpiChanged) then
-        FOnAfterMonitorDpiChanged(Self, OldPPI, FCurrentPPI);
-    end;
-    Message.Result := 0;
-  end;
-end;
-
-}
-
-//TODO: Skalierung einbauen
 
 type
   TParentColortype = (
@@ -97,15 +55,13 @@ type
     FColorMouseOver: TColor;
     FColorPressed: TColor;
     FColorFrame: TColor;
-    FFont: TFont;
     FImages: TCustomImageList;
     FImageIndex: Integer;
+    FUnscaledFontSize : Integer;
     FDisableImageIndex: Integer;
     FImageAlignment: TImageAlignment;
     FParentColortype: TParentColortype;
     FPopup: Boolean;
-//    FParentColor : TColor;
-//    FParentWindowHandle: HWND;
     FOnPopup: TNotifyEvent;
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
@@ -116,13 +72,11 @@ type
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure WMPaint( var Message: TWMPaint ); message WM_PAINT;
     procedure WMERASEBKGND(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-//    procedure WMDpiChanged(var Message: TWMDpi); message WM_DPICHANGED;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
     procedure PaintButton;
     procedure SetColor(const Value: TColor);
     procedure SetFrameColor(const Value: TColor);
     procedure SetColorDown(const Value: TColor);
-    procedure SetFont(const Value: TFont);//BUG - Änderungen zur Laufzeit werden nicht gleich gemalt
     procedure SetCaption(const Value: string);
     procedure SetImgIdx(const Value: Integer);
     procedure SetDisableImgIdx(const Value: Integer);
@@ -140,6 +94,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Invalidate; override;
+    property UnscaledFontSize : Integer read FUnscaledFontSize write FUnscaledFontSize;
   published
     property Align;
     property Anchors;
@@ -152,7 +107,7 @@ type
     property ImageIdx: Integer read FImageIndex write SetImgIdx default -1;
     property DisableImageIdx: Integer read FDisableImageIndex write SetDisableImgIdx default -1;
     property Enabled;
-    property Font: TFont read FFOnt write SetFont;
+    property Font;
     property Images: TCustomImageList read FImages write FImages;
     property ImageAlignment: TImageAlignment read FImageAlignment write SetImageAlignment default iaLeft;
     property Left;
@@ -239,7 +194,7 @@ begin
   try
     Canvas.Handle := DC;
     try
-      FBmp.Canvas.Font.Assign(FFont);
+      FBmp.Canvas.Font := Self.Font;
       PaintButton;
     finally
       Canvas.Handle := 0;
@@ -261,18 +216,20 @@ begin
   Glyph:= (FImageIndex <> -1) and (Assigned(FImages));
   BmpAlpha:= TBitmap.Create;
   try
+
+//    //Change: Seidel 2021-01-04
+//    //Font vom Canvas Skalieren; FScaleFactor kommt aus vcl.Controls
+//    if FScaleFactor <> 1 then
+//    begin
+//      OldSize := FBmp.Canvas.Font.Size;
+//      FBmp.Canvas.Font.Size := Round( OldSize * FScaleFactor )
+//    end;
+
     BmpAlpha.PixelFormat:= pf24bit;
     BmpAlpha.Width:= FBmp.Width - 2;
     BmpAlpha.Height:= FBmp.Height - 2;
     BmpAlpha.Canvas.Brush.Color:= clWhite;
     BmpAlpha.Canvas.FillRect(BmpAlpha.Canvas.ClipRect);
-
-    //Change: Seidel 2021-01-04
-    //Font vom Canvas Skalieren; FScaleFactor kommt aus vcl.Controls
-    if FScaleFactor <> 1 then
-    begin
-      FBmp.Canvas.Font.Size := Round( FBmp.Canvas.Font.Size * FScaleFactor )
-    end;
 
     //entsprechende Bilder holen
     if Glyph then
@@ -295,8 +252,7 @@ begin
         DC := BmpAlpha.Canvas.Handle;
         SetTextColor(DC, clBlack);
         SetBkColor(DC, clWhite);
-        BitBlt(DC, GlyphX, GlyphY , Bmp.Width, Bmp.Height,
-          Bmp.Canvas.Handle, 0, 0, SRCAND );
+        BitBlt(DC, GlyphX, GlyphY , Bmp.Width, Bmp.Height,Bmp.Canvas.Handle, 0, 0, SRCAND );
       finally
         Bmp.Free;
       end;
@@ -343,6 +299,7 @@ begin
     end
     else
       FBmp.Canvas.TextOut(TextX + i, TextY + i, FCaption);
+
   finally
     BmpAlpha.Free;
   end;
@@ -448,9 +405,9 @@ begin
     end;
 
   end;
-    PaintAlphaTxt(FButtonDown);
-  BitBlt(Canvas.Handle, 0, 0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle, 0, 0,
-    SRCCOPY);
+
+  PaintAlphaTxt(FButtonDown);
+  BitBlt(Canvas.Handle, 0, 0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle, 0, 0,SRCCOPY);
 end;
 
 procedure TGlassButton.WMERASEBKGND(var Message: TWMEraseBkgnd);
@@ -465,27 +422,6 @@ begin
   if not (csLoading in ComponentState) then
     Resize;
 end;
-
-//procedure TGlassButton.WMDpiChanged(var Message: TWMDpi);
-//begin
-//  if not (csDesigning in ComponentState) then
-//  begin
-//    Application.MessageBox( PChar( 'WMDpiChanged'), nil, MB_OK );
-//    Message.Result := 0;
-//  end;
-//end;
-
-//procedure TGlassButton.ParentWndProc(var Msg: TMessage);
-//begin
-//  FParentWindowHandle( Msg );
-//  if (Msg.Msg = WM_PAINT) then
-//  begin
-//    Application.MessageBox( PChar(''), PChar('parent malt'), MB_OK );
-//  end
-//  //alle anderen Nachrichten werden weitergeleitet
-//  else
-//    Msg.Result := DefWindowProc(FParentWindowHandle, Msg.Msg, Msg.wParam, Msg.lParam);
-//end;
 
 procedure TGlassButton.SetCaption(const Value: string);
 begin
@@ -502,13 +438,6 @@ end;
 procedure TGlassButton.SetColorDown(const Value: TColor);
 begin
   FColorPressed := Value;
-  Invalidate;
-end;
-
-procedure TGlassButton.SetFont(const Value: TFont);
-begin
-  FFont.Assign(Value);
-  Caption:= FCaption;
   Invalidate;
 end;
 
@@ -578,6 +507,14 @@ begin
     end;
   end;
 
+  //Change: Seidel 2021-01-04
+  //Font vom Canvas Skalieren; FScaleFactor kommt aus vcl.Controls
+//  if FScaleFactor <> 1 then
+//  begin
+//    FOldSize := FBmp.Canvas.Font.Size;
+//    FBmp.Canvas.Font.Size := Round( FOldSize * FScaleFactor )
+//  end;
+
   ts:= FBmp.Canvas.TextExtent(FCaption);
   TextX:= 4;
   if (FImageIndex <> -1) and Assigned(FImages) then
@@ -588,7 +525,6 @@ end;
 constructor TGlassButton.Create(AOwner: TComponent);
 begin
   inherited;
-//  FParentWindowHandle:=GetParentHandle;
   ColorMouseOver := clWhite;
   ColorFrame := clGray;
   ColorPressed := clBlack;
@@ -600,10 +536,6 @@ begin
   FParentColortype := pcSingle;
   FBtnIdx := -1;
   FButtonDown := False;
-  FFont := TFont.Create;
-  FFont.Name := 'Tahoma';
-  FFont.Color := clBlack;
-  FFont.Size := 10;
   FImageIndex:= -1;
   FDisableImageIndex := -1;
   FPopup:= False;
@@ -617,8 +549,6 @@ end;
 destructor TGlassButton.Destroy;
 begin
   FBmp.Free;
-  FFont.Free;
-//  DeAllocateHwnd( FParentWindowHandle );
   inherited Destroy;
 end;
 
@@ -713,9 +643,10 @@ end;
 
 procedure TGlassButton.CMFontChanged(var Message: TMessage);
 begin
-  Refresh;
+//  Refresh;
 //  PaintButton;
 //  Inherited;
+  Invalidate;
 end;
 
 procedure TGlassButton.WMPaint( var Message: TWMPaint );

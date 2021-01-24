@@ -1,12 +1,13 @@
-unit GradientPanel;
-
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   GradientPanel
-  Author: Sebastian Seidel
+  Author: copyright (c) Sebastian Seidel
   Date:   30.09.2020
 
-  Ermöglicht einen Farbverlauf innerhalb eines Panels
+  Ermöglicht einen Farbverlauf innerhalb eines Panels (horzontal und vertikal)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
+unit GradientPanel;
+
 interface
 
 uses
