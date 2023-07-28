@@ -1,4 +1,4 @@
-# Basti_Komponenten_Delphi
+# Basti-Components_Delphi
 DBEditEx,
 Edit4User, 
 EditEx, 
